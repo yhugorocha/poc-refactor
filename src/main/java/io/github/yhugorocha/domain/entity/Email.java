@@ -3,7 +3,7 @@ package io.github.yhugorocha.domain.entity;
 import io.github.yhugorocha.domain.enums.StatusEmail;
 import lombok.Data;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Data

@@ -1,8 +1,6 @@
 package io.github.yhugorocha.rest.controller;
 
 import io.github.yhugorocha.domain.entity.GestorRA;
-import io.github.yhugorocha.domain.entity.Quadra;
-import io.github.yhugorocha.domain.entity.Solicitante;
 import io.github.yhugorocha.domain.repositorio.GestoresRA;
 import io.github.yhugorocha.rest.dto.GestorRADTO;
 import io.github.yhugorocha.service.GestorRAService;
@@ -10,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController

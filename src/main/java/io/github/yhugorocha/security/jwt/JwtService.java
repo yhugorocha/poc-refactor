@@ -5,9 +5,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -30,16 +33,18 @@ public class JwtService {
                 .builder()
                 .setSubject(usuario.getLogin())
                 .setExpiration(data)
-                .signWith(SignatureAlgorithm.HS512, chaveAssinatura)
+                .signWith(SignatureAlgorithm.HS256, chaveAssinatura)
                 .compact();
-
     }
+
     private Claims obterClaims(String token) throws ExpiredJwtException {
-        return Jwts
-                .parser()
-                .setSigningKey(chaveAssinatura)
-                .parseClaimsJws(token)
-                .getBody();
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(chaveAssinatura));
+
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public Boolean tokenValido(String token){
@@ -58,5 +63,4 @@ public class JwtService {
     public String obterLoginUsuario(String token) throws ExpiredJwtException{
         return (String) obterClaims(token).getSubject();
     }
-
 }
