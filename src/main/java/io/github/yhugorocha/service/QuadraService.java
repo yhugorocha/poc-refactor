@@ -2,10 +2,9 @@ package io.github.yhugorocha.service;
 
 import io.github.yhugorocha.domain.entity.Quadra;
 import io.github.yhugorocha.rest.dto.QuadraDTO;
+import java.util.List;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public interface QuadraService {

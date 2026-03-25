@@ -1,22 +1,21 @@
 package io.github.yhugorocha.security.jwt;
 
 import io.github.yhugorocha.service.impl.UsuarioServiceImpl;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private JwtService jwtService;
-    private UsuarioServiceImpl usuarioService;
+    private final JwtService jwtService;
+    private final UsuarioServiceImpl usuarioService;
 
     public JwtAuthFilter( JwtService jwtService, UsuarioServiceImpl usuarioService ) {
         this.jwtService = jwtService;
@@ -29,17 +28,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             HttpServletResponse httpServletResponse,
             FilterChain filterChain) throws ServletException, IOException {
 
-        String authorization = httpServletRequest.getHeader("Authorization");
+        final String authorization = httpServletRequest.getHeader("Authorization");
 
         if( authorization != null && authorization.startsWith("Bearer")){
-            String token = authorization.split(" ")[1];
-            boolean isValid = jwtService.tokenValido(token);
+            final String token = authorization.split(" ")[1];
+            final boolean isValid = jwtService.tokenValido(token);
 
             if(isValid){
-                String loginUsuario = jwtService.obterLoginUsuario(token);
-                UserDetails usuario = usuarioService.loadUserByUsername(loginUsuario);
-                UsernamePasswordAuthenticationToken user = new
-                        UsernamePasswordAuthenticationToken(usuario,null,
+                final String loginUsuario = jwtService.obterLoginUsuario(token);
+                final UserDetails usuario = usuarioService.loadUserByUsername(loginUsuario);
+                final UsernamePasswordAuthenticationToken user = new
+                        UsernamePasswordAuthenticationToken(usuario, null,
                         usuario.getAuthorities());
                 user.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpServletRequest));
                 SecurityContextHolder.getContext().setAuthentication(user);

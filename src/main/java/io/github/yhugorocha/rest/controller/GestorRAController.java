@@ -4,12 +4,11 @@ import io.github.yhugorocha.domain.entity.GestorRA;
 import io.github.yhugorocha.domain.repositorio.GestoresRA;
 import io.github.yhugorocha.rest.dto.GestorRADTO;
 import io.github.yhugorocha.service.GestorRAService;
+import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import jakarta.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/agenda/gestorra/")
@@ -33,7 +32,7 @@ public class GestorRAController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Integer save(@RequestBody @Valid GestorRADTO dto){
-        GestorRA gestor = service.salvar(dto);
+        final GestorRA gestor = service.salvar(dto);
         return gestor.getId();
     }
 

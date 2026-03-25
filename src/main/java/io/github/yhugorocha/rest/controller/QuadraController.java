@@ -3,13 +3,12 @@ package io.github.yhugorocha.rest.controller;
 import io.github.yhugorocha.domain.entity.Quadra;
 import io.github.yhugorocha.rest.dto.QuadraDTO;
 import io.github.yhugorocha.service.QuadraService;
+import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/agenda/quadra/")
@@ -47,13 +46,13 @@ public class QuadraController {
     }
     @GetMapping
     public List<Quadra> find(Quadra filtro ){
-        ExampleMatcher matcher = ExampleMatcher
+        final ExampleMatcher matcher = ExampleMatcher
                 .matching()
                 .withIgnoreCase()
                 .withStringMatcher(
-                        ExampleMatcher.StringMatcher.CONTAINING );
+                        ExampleMatcher.StringMatcher.CONTAINING);
 
-        Example example = Example.of(filtro, matcher);
+        final Example example = Example.of(filtro, matcher);
         return quadraService.findAll(example);
     }
 

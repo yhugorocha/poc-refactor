@@ -26,12 +26,21 @@ Os benefícios esperados desta migração são:
 | JPA | `javax.persistence.*` | `jakarta.persistence.*` |
 | Validation | `javax.validation.*` | `jakarta.validation.*` |
 | Lombok | sem versão explícita | `1.18.44` |
+| OpenRewrite | não versionado no projeto base | `rewrite-maven-plugin` + `rewrite.yml` versionado |
+| Padronização estática | manual e heterogênea | limpeza/ordenação de imports, `final` em variáveis locais e simplificações automáticas |
 
 ## 3. Uso do OpenRewrite
 
-Embora a configuração do plugin não esteja versionada nesta branch, o processo de migração foi executado com OpenRewrite em duas etapas distintas: uma para modernização para Java 17 e outra para upgrade para Spring Boot 3.0.
+O uso do OpenRewrite nesta migração ficou dividido em duas fases:
 
-### Etapa 1: migração para Java 17
+1. uma fase inicial de upgrade de plataforma, usada para apoiar a subida para Java 17 e Spring Boot 3;
+2. uma fase posterior de padronização, agora versionada no próprio repositório por meio do `rewrite.yml` e do `rewrite-maven-plugin`.
+
+### Fase 1: upgrade de plataforma
+
+Na etapa inicial da migração, o OpenRewrite foi usado com recipes específicas para upgrade de plataforma.
+
+#### Upgrade para Java 17
 
 Foi utilizado o `rewrite-maven-plugin` com a recipe `org.openrewrite.java.migrate.UpgradeToJava17`:
 
@@ -66,7 +75,7 @@ mvn rewrite:dryRun
 mvn rewrite:run
 ```
 
-### Etapa 2: migração para Spring Boot 3
+#### Upgrade para Spring Boot 3
 
 Em seguida, foi usado o `rewrite-maven-plugin` com a recipe `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0`:
 
@@ -97,6 +106,138 @@ mvn rewrite:dryRun
 mvn rewrite:run
 ```
 
+Essas duas recipes cobriram o upgrade estrutural da stack. Elas foram responsáveis por acelerar a migração de base, especialmente nos pontos mais repetitivos e mecânicos da atualização de versão.
+
+### Fase 2: padronização versionada no repositório
+
+Depois do upgrade principal, o projeto passou a versionar uma recipe composta própria, `com.empresa.Padronizacao`, definida em `rewrite.yml` e ativada no `pom.xml`.
+
+Configuração atual observada no `pom.xml`:
+
+```xml
+<plugin>
+    <groupId>org.openrewrite.maven</groupId>
+    <artifactId>rewrite-maven-plugin</artifactId>
+    <version>6.34.0</version>
+    <configuration>
+        <activeRecipes>
+            <recipe>com.empresa.Padronizacao</recipe>
+        </activeRecipes>
+        <configLocation>${maven.multiModuleProjectDirectory}/rewrite.yml</configLocation>
+        <exportDatatables>true</exportDatatables>
+    </configuration>
+    <dependencies>
+        <dependency>
+            <groupId>org.openrewrite.recipe</groupId>
+            <artifactId>rewrite-static-analysis</artifactId>
+            <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openrewrite.recipe</groupId>
+            <artifactId>rewrite-spring</artifactId>
+            <version>6.17.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openrewrite.recipe</groupId>
+            <artifactId>rewrite-migrate-java</artifactId>
+            <version>3.31.0</version>
+        </dependency>
+    </dependencies>
+</plugin>
+```
+
+Definição da recipe composta em `rewrite.yml`:
+
+```yaml
+type: specs.openrewrite.org/v1beta/recipe
+name: com.empresa.Padronizacao
+displayName: Padrão de código da empresa
+recipeList:
+  - org.openrewrite.java.RemoveUnusedImports
+  - org.openrewrite.java.OrderImports
+  - org.openrewrite.staticanalysis.CommonStaticAnalysis
+  - org.openrewrite.java.spring.NoAutowiredOnConstructor
+  - org.openrewrite.java.spring.BeanMethodsNotPublic
+  - org.openrewrite.staticanalysis.FinalizeLocalVariables
+  - org.openrewrite.staticanalysis.NeedBraces
+  - org.openrewrite.java.migrate.util.ReplaceStreamCollectWithToList
+```
+
+### O que cada recipe faz e como ela apareceu neste projeto
+
+#### `org.openrewrite.java.RemoveUnusedImports`
+
+Remove imports sem uso.
+
+Efeito observável no projeto:
+
+- remoção de `org.springframework.beans.factory.annotation.Value` em `WebConfig`;
+- limpeza de imports em interfaces, enums, controllers e serviços que ficaram com código mais enxuto.
+
+#### `org.openrewrite.java.OrderImports`
+
+Reordena os imports de acordo com uma convenção estável.
+
+Efeito observável no projeto:
+
+- reorganização dos imports em arquivos como `SecurityConfig`, `UsuarioController`, `HorarioController`, `JwtAuthFilter` e `JwtService`.
+
+#### `org.openrewrite.staticanalysis.CommonStaticAnalysis`
+
+Aplica um conjunto de melhorias comuns de análise estática.
+
+Efeito observável no projeto:
+
+- troca de lambda simples por method reference em `ApplicationControllerAdvice`, usando `DefaultMessageSourceResolvable::getDefaultMessage`;
+- simplificações em `ReservaServiceImpl`, como `this::converter` e `ReservaNaoEncontradaException::new`;
+- redução de código intermediário desnecessário em alguns métodos.
+
+#### `org.openrewrite.java.spring.NoAutowiredOnConstructor`
+
+Remove `@Autowired` redundante de construtores quando a injeção por construtor já é suficiente.
+
+Efeito observável no projeto:
+
+- não houve um diff inequívoco dessa recipe na rodada atual;
+- o projeto ainda mantém vários pontos com `@Autowired` em campos, então esse padrão dominante não foi alterado por ela.
+
+#### `org.openrewrite.java.spring.BeanMethodsNotPublic`
+
+Reduz a visibilidade de métodos anotados com `@Bean` quando não há necessidade de serem públicos.
+
+Efeito observável no projeto:
+
+- não houve mudança clara atribuível a essa recipe no diff atual;
+- os métodos `@Bean` centrais da configuração de segurança permaneceram públicos.
+
+#### `org.openrewrite.staticanalysis.FinalizeLocalVariables`
+
+Marca variáveis locais como `final` quando elas não são reatribuídas.
+
+Efeito observável no projeto:
+
+- adição de `final` em classes como `JwtService`, `JwtAuthFilter`, `UsuarioController`, `UsuarioServiceImpl`, `HorarioController` e `ReservaServiceImpl`.
+
+#### `org.openrewrite.staticanalysis.NeedBraces`
+
+Garante o uso de chaves em estruturas de controle para evitar blocos implícitos.
+
+Efeito observável no projeto:
+
+- a recipe passou a fazer parte da padronização versionada;
+- no diff atual não houve um exemplo isolado tão evidente quanto nas recipes de imports e `final`, mas ela reforça o padrão de legibilidade e segurança sintática.
+
+#### `org.openrewrite.java.migrate.util.ReplaceStreamCollectWithToList`
+
+Substitui `stream().collect(Collectors.toList())` por `stream().toList()` quando a troca é segura.
+
+Efeito observável no projeto:
+
+- não houve ocorrência inequívoca dessa substituição no diff atual;
+- a recipe ficou preparada para futuras ocorrências elegíveis durante a padronização da base.
+
+### O que foi automatizado com apoio do OpenRewrite
+
 Pelo resultado do diff da branch, o OpenRewrite foi usado principalmente para acelerar mudanças mecânicas e repetitivas, como:
 
 - substituição em lote de imports `javax.*` por `jakarta.*`;
@@ -104,13 +245,12 @@ Pelo resultado do diff da branch, o OpenRewrite foi usado principalmente para ac
 - atualização de trechos impactados pela mudança de stack;
 - modernização inicial da base para versões mais recentes de Java e Spring.
 
-Na prática, a divisão entre automação e ajuste manual ficou assim:
-
-### O que foi automatizado com apoio do OpenRewrite
+Além do upgrade principal, a recipe `com.empresa.Padronizacao` automatizou:
 
 - troca dos imports de `javax.persistence`, `javax.validation` e `javax.servlet`;
-- remoção de imports não utilizados em alguns arquivos;
-- parte do ajuste estrutural necessário para compatibilidade com Spring Boot 3.
+- remoção e ordenação de imports;
+- adição de `final` em variáveis locais;
+- simplificações pontuais sugeridas por análise estática.
 
 ### O que claramente exigiu ajuste manual
 
@@ -119,7 +259,7 @@ Na prática, a divisão entre automação e ajuste manual ficou assim:
 - reorganização das dependências do `pom.xml`;
 - revisão do fluxo de autenticação JWT para a API nova do `jjwt 0.12.x`.
 
-Em resumo: a migração foi assistida por OpenRewrite com recipes conhecidas para Java 17 e Spring Boot 3, mas essa configuração não foi mantida no estado versionado atual da branch.
+Em resumo: a migração foi assistida por OpenRewrite no upgrade de plataforma e, no estado atual da branch, passou a manter uma recipe versionada de padronização para sustentar novas execuções e tornar o processo mais reproduzível.
 
 ## 4. Principais mudanças no código
 
@@ -333,6 +473,19 @@ return Jwts.parser()
 
 O código foi atualizado para a API nova do parser, mas essa migração também introduziu um ponto de atenção documentado na seção de problemas: a geração e a validação do token não derivam a chave da mesma forma.
 
+### 4.6 Padronização adicional gerada pelo `rewrite.yml`
+
+Além da migração de stack, a branch passou por uma rodada de padronização de código guiada pelo `rewrite.yml`.
+
+Exemplos reais observados no diff atual:
+
+- `WebConfig`: remoção de import não utilizado;
+- `ApplicationControllerAdvice`: method reference (`DefaultMessageSourceResolvable::getDefaultMessage`) e variável local `final`;
+- `UsuarioController`, `HorarioController`, `JwtService` e `JwtAuthFilter`: reordenação de imports e adoção de `final` em variáveis locais;
+- `ReservaServiceImpl`: simplificações de retorno, uso de method reference e redução de blocos `if/else` verbosos.
+
+Essa etapa não mudou o comportamento funcional principal do sistema, mas melhorou legibilidade, consistência e repetibilidade da base.
+
 ## 5. Problemas encontrados durante a migração
 
 Esta seção documenta apenas problemas que puderam ser inferidos diretamente do diff, do estado atual do código e da validação executada na branch.
@@ -461,29 +614,28 @@ Durante a adaptação para a API nova do JJWT, a implementação atual trocou o 
 
 A alteração está presente no código, mas o histórico da branch não mostra justificativa versionada para a troca.
 
-### 5.7 Rastreabilidade parcial do OpenRewrite
+### 5.7 Rastreabilidade em duas fases do OpenRewrite
 
 **Erro / sintoma**
 
-O processo de migração com OpenRewrite é conhecido, mas a configuração do plugin e das recipes não ficou versionada no estado atual do repositório.
+O processo com OpenRewrite passou por duas etapas diferentes: o upgrade inicial de plataforma foi executado com recipes pontuais, enquanto a configuração atualmente versionada no repositório representa uma etapa posterior de padronização.
 
 **Causa**
 
-Os comandos e recipes usados na migração foram executados fora do `pom.xml` final que ficou nesta branch, então o histórico atual não reproduz a automação por si só.
+A migração para Java 17 e Spring Boot 3 foi feita antes da configuração final do `rewrite.yml` e do plugin atual serem consolidados no `pom.xml`. Como resultado, o histórico mistura uma fase inicial informada pelo processo da migração com uma fase posterior já versionada na branch.
 
 **Solução aplicada**
 
-Documentar explicitamente neste `MIGRATION.md` as recipes e comandos efetivamente usados:
+Documentar explicitamente neste `MIGRATION.md`:
+
+- as recipes de upgrade usadas na primeira fase;
+- a recipe composta `com.empresa.Padronizacao` versionada em `rewrite.yml`;
+- os comandos de execução:
 
 ```bash
 mvn rewrite:dryRun
 mvn rewrite:run
 ```
-
-Recipes documentadas:
-
-- `org.openrewrite.java.migrate.UpgradeToJava17`
-- `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0`
 
 ### 5.8 O que não foi possível confirmar
 
@@ -497,7 +649,7 @@ Durante a análise desta branch:
 
 - migrações de Spring Boot 2.x para 3.x exigem tratar segurança e Jakarta como itens de primeira classe, não como detalhes secundários;
 - atualizar apenas a versão do parent no `pom.xml` não resolve a migração; segurança, JWT e namespaces precisam ser revistos em conjunto;
-- se OpenRewrite for usado, vale versionar plugin, recipes e relatório de execução para manter rastreabilidade;
+- se OpenRewrite for usado, vale versionar plugin, `rewrite.yml`, recipe composta e relatório de execução desde a primeira rodada da migração;
 - em migrações de autenticação, a forma de derivar a chave deve permanecer consistente entre emissão e validação do token;
 - bibliotecas de suporte como Lombok devem ser atualizadas junto com o JDK, não apenas depois de erros de compilação;
 - a ausência de testes automatizados reduz muito a confiança da migração, mesmo quando a aplicação compila.
@@ -532,6 +684,13 @@ As seguintes propriedades são consumidas por `src/main/resources/application.pr
 
 ```bash
 mvn clean package
+```
+
+### Executar a padronização versionada no repositório
+
+```bash
+mvn rewrite:dryRun
+mvn rewrite:run
 ```
 
 ### Execução

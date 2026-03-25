@@ -9,14 +9,13 @@ import io.github.yhugorocha.domain.repositorio.Regioes;
 import io.github.yhugorocha.exception.RegraNegocioException;
 import io.github.yhugorocha.rest.dto.QuadraDTO;
 import io.github.yhugorocha.service.QuadraService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @Service
 public class QuadraServiceImpl implements QuadraService {
@@ -32,12 +31,12 @@ public class QuadraServiceImpl implements QuadraService {
     @Transactional
     public Quadra salvar(QuadraDTO quadraDTO) {
 
-        Regiao regiao = regioes.findById(quadraDTO.getRegiao())
+        final Regiao regiao = regioes.findById(quadraDTO.getRegiao())
                 .orElseThrow(() -> new RegraNegocioException("Região Não Encontrada"));
 
-        Endereco endereco = enderecos.save(quadraDTO.getEndereco());
+        final Endereco endereco = enderecos.save(quadraDTO.getEndereco());
 
-        Quadra quadra = new Quadra();
+        final Quadra quadra = new Quadra();
         quadra.setNome(quadraDTO.getNome());
         quadra.setQtd_pessoas(quadraDTO.getQtd_pessoas());
         quadra.setFoto(quadraDTO.getFoto());

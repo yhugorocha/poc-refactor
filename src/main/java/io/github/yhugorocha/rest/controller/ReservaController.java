@@ -6,10 +6,9 @@ import io.github.yhugorocha.rest.dto.AtualizaStatusReservaDTO;
 import io.github.yhugorocha.rest.dto.InformacoesReservaDTO;
 import io.github.yhugorocha.rest.dto.ReservaDTO;
 import io.github.yhugorocha.service.ReservaService;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/agenda/reserva/")
@@ -29,9 +28,7 @@ public class ReservaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Reserva save(@RequestBody ReservaDTO reservaDto){
-        Reserva reserva = service.save(reservaDto);
-
-        return reserva;
+        return service.save(reservaDto);
     }
 
     @GetMapping("{id}")
@@ -47,7 +44,7 @@ public class ReservaController {
     @PatchMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateStatus(@PathVariable Integer id, @RequestBody AtualizaStatusReservaDTO dto){
-        String status = dto.getNovoStatus();
+        final String status = dto.getNovoStatus();
         service.atualizaStatus(id, StatusReserva.valueOf(status));
     }
 }

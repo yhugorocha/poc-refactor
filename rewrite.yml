@@ -1,0 +1,12 @@
+type: specs.openrewrite.org/v1beta/recipe
+name: com.empresa.Padronizacao
+displayName: Padrão de código da empresa
+recipeList:
+  - org.openrewrite.java.RemoveUnusedImports
+  - org.openrewrite.java.OrderImports
+  - org.openrewrite.staticanalysis.CommonStaticAnalysis
+  - org.openrewrite.java.spring.NoAutowiredOnConstructor
+  - org.openrewrite.java.spring.BeanMethodsNotPublic
+  - org.openrewrite.staticanalysis.FinalizeLocalVariables
+  - org.openrewrite.staticanalysis.NeedBraces
+  - org.openrewrite.java.migrate.util.ReplaceStreamCollectWithToList

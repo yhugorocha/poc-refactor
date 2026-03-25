@@ -1,10 +1,10 @@
 package io.github.yhugorocha.domain.entity;
 
-import io.github.yhugorocha.domain.enums.StatusReserva;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import io.github.yhugorocha.domain.enums.StatusReserva;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 

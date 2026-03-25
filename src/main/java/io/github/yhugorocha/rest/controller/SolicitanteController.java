@@ -4,12 +4,11 @@ import io.github.yhugorocha.domain.entity.Endereco;
 import io.github.yhugorocha.domain.entity.Solicitante;
 import io.github.yhugorocha.domain.repositorio.Enderecos;
 import io.github.yhugorocha.domain.repositorio.Solicitantes;
+import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import jakarta.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/agenda/solicitante/")
@@ -34,7 +33,7 @@ public class SolicitanteController {
     @ResponseStatus(HttpStatus.CREATED)
     public Solicitante salvar(@RequestBody @Valid Solicitante solicitante){
 
-        Endereco end = enderecos.save(solicitante.getEndereco());
+        final Endereco end = enderecos.save(solicitante.getEndereco());
         solicitante.setEndereco(end);
         return solicitantes.save(solicitante);
     }

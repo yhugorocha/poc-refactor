@@ -1,9 +1,10 @@
 package io.github.yhugorocha.config;
 
+import lombok.RequiredArgsConstructor;
+
 import io.github.yhugorocha.security.jwt.JwtAuthFilter;
 import io.github.yhugorocha.security.jwt.JwtService;
 import io.github.yhugorocha.service.impl.UsuarioServiceImpl;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -59,7 +60,7 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        final DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(usuarioService);
         authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;

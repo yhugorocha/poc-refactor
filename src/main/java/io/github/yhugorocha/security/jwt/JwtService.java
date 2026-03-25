@@ -7,13 +7,12 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
@@ -25,9 +24,9 @@ public class JwtService {
     private String chaveAssinatura;
 
     public String gerarToken(Usuario usuario) {
-        long expString = Long.valueOf(expiracao);
-        LocalDateTime dataHoraExpiracao = LocalDateTime.now().plusMinutes(expString);
-        Date data = Date.from(dataHoraExpiracao.atZone(ZoneId.systemDefault()).toInstant());
+        final long expString = Long.valueOf(expiracao);
+        final LocalDateTime dataHoraExpiracao = LocalDateTime.now().plusMinutes(expString);
+        final Date data = Date.from(dataHoraExpiracao.atZone(ZoneId.systemDefault()).toInstant());
 
         return Jwts
                 .builder()
@@ -38,7 +37,7 @@ public class JwtService {
     }
 
     private Claims obterClaims(String token) throws ExpiredJwtException {
-        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(chaveAssinatura));
+        final SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(chaveAssinatura));
 
         return Jwts.parser()
                 .verifyWith(key)
@@ -49,9 +48,9 @@ public class JwtService {
 
     public Boolean tokenValido(String token){
         try {
-            Claims claim =  obterClaims(token);
-            Date dataExpiracao = claim.getExpiration();
-            LocalDateTime localDateTime = dataExpiracao.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+            final Claims claim = obterClaims(token);
+            final Date dataExpiracao = claim.getExpiration();
+            final LocalDateTime localDateTime = dataExpiracao.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
             return !LocalDateTime.now().isAfter(localDateTime);
 

@@ -8,12 +8,11 @@ import io.github.yhugorocha.exception.ReservaNaoEncontradaException;
 import io.github.yhugorocha.rest.dto.InformacoesReservaDTO;
 import io.github.yhugorocha.rest.dto.ReservaDTO;
 import io.github.yhugorocha.service.ReservaService;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @Service
 public class ReservaServiceImpl implements ReservaService {
@@ -34,19 +33,19 @@ public class ReservaServiceImpl implements ReservaService {
     @Transactional
     public Reserva save(ReservaDTO reservaDto) {
 
-        Reserva reserva = new Reserva();
+        final Reserva reserva = new Reserva();
 
-        Solicitante solicitante = solicitantes.findById(reservaDto.getSolicitante())
-                .orElseThrow(()-> new RegraNegocioException("Solicitante não encontrado"));
+        final Solicitante solicitante = solicitantes.findById(reservaDto.getSolicitante())
+                .orElseThrow(() -> new RegraNegocioException("Solicitante não encontrado"));
 
-        Quadra quadra = quadras.findById(reservaDto.getQuadra())
-                .orElseThrow(()-> new RegraNegocioException("Quadra não encontrada"));
+        final Quadra quadra = quadras.findById(reservaDto.getQuadra())
+                .orElseThrow(() -> new RegraNegocioException("Quadra não encontrada"));
 
-        Semana semana = semanas.findById(reservaDto.getSemana())
-                .orElseThrow(()-> new RegraNegocioException("Dia da semana não encontrada"));
+        final Semana semana = semanas.findById(reservaDto.getSemana())
+                .orElseThrow(() -> new RegraNegocioException("Dia da semana não encontrada"));
 
-        Horario horario = horarios.findById(reservaDto.getHorario())
-                .orElseThrow(()-> new RegraNegocioException("Horario não encontrada"));
+        final Horario horario = horarios.findById(reservaDto.getHorario())
+                .orElseThrow(() -> new RegraNegocioException("Horario não encontrada"));
 
         reserva.setSolicitante(solicitante);
         reserva.setQuadra(quadra);
@@ -57,10 +56,10 @@ public class ReservaServiceImpl implements ReservaService {
         reserva.setHorario(horario);
         reserva.setStatus(StatusReserva.ATIVA);
 
-        Boolean s = existeReservaPorSolicitante(reserva);
+        final Boolean s = existeReservaPorSolicitante(reserva);
 
         if(s){
-            Boolean r = existeReserva(reserva);
+            final Boolean r = existeReserva(reserva);
             if(r){
                 return reservas.save(reserva);
             }else{
@@ -74,9 +73,7 @@ public class ReservaServiceImpl implements ReservaService {
 
     public List<Reserva> obterReservasPorQuadra(Integer idQuadra){
 
-        List<Reserva> reservas = this.reservas.reservaPorQuadra(idQuadra);
-
-        return reservas;
+        return this.reservas.reservaPorQuadra(idQuadra);
 
     }
 
@@ -84,7 +81,7 @@ public class ReservaServiceImpl implements ReservaService {
     public InformacoesReservaDTO obterDadosReserva(Integer id) {
 
         return reservas.findById(id)
-                .map(r -> converter(r))
+                .map(this::converter)
                 .orElseThrow(() -> new RegraNegocioException("Reserva não encontrada"));
     }
 
@@ -94,7 +91,7 @@ public class ReservaServiceImpl implements ReservaService {
         reservas.findById(id).map(reserva -> {
             reserva.setStatus(statusReserva);
             return reservas.save(reserva);
-        }).orElseThrow(()-> new ReservaNaoEncontradaException());
+        }).orElseThrow(ReservaNaoEncontradaException::new);
     }
 
     public List<Reserva> findAll(){
@@ -116,29 +113,19 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     private Boolean existeReserva(Reserva reserva){
-        Integer idQuadra = reserva.getQuadra().getId();
-        Integer idSemana = reserva.getSemana().getId();
-        Integer idHorario = reserva.getHorario().getId();
+        final Integer idQuadra = reserva.getQuadra().getId();
+        final Integer idSemana = reserva.getSemana().getId();
+        final Integer idHorario = reserva.getHorario().getId();
 
-        List<Reserva> r = reservas.existeReserva(idQuadra,idSemana,idHorario);
-
-        if(r.isEmpty()){
-            return true;
-        }else{
-            return false;
-        }
+        final List<Reserva> r = reservas.existeReserva(idQuadra, idSemana, idHorario);
+        return r.isEmpty();
     }
 
     private Boolean existeReservaPorSolicitante(Reserva reserva){
-        Integer idSolicitante = reserva.getSolicitante().getId();
+        final Integer idSolicitante = reserva.getSolicitante().getId();
 
-        List<Reserva> s = reservas.existeReservaPorSolicitante(idSolicitante);
-
-        if(s.isEmpty()){
-            return true;
-        }else{
-            return false;
-        }
+        final List<Reserva> s = reservas.existeReservaPorSolicitante(idSolicitante);
+        return s.isEmpty();
     }
 
 

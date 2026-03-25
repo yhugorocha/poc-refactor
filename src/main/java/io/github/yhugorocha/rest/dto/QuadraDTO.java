@@ -1,8 +1,9 @@
 package io.github.yhugorocha.rest.dto;
 
 
-import io.github.yhugorocha.domain.entity.Endereco;
 import lombok.Data;
+
+import io.github.yhugorocha.domain.entity.Endereco;
 
 @Data
 public class QuadraDTO {

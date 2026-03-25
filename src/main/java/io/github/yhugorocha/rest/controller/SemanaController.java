@@ -2,13 +2,12 @@ package io.github.yhugorocha.rest.controller;
 
 import io.github.yhugorocha.domain.entity.Semana;
 import io.github.yhugorocha.domain.repositorio.Semanas;
+import java.util.List;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/agenda/semana/")
@@ -35,13 +34,13 @@ public class SemanaController {
 
     @GetMapping
     public List<Semana> find(Semana filtro ){
-        ExampleMatcher matcher = ExampleMatcher
+        final ExampleMatcher matcher = ExampleMatcher
                 .matching()
                 .withIgnoreCase()
                 .withStringMatcher(
-                        ExampleMatcher.StringMatcher.CONTAINING );
+                        ExampleMatcher.StringMatcher.CONTAINING);
 
-        Example example = Example.of(filtro, matcher);
+        final Example example = Example.of(filtro, matcher);
         return semanas.findAll(example);
     }
 }
