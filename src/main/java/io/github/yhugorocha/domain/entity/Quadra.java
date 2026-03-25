@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -36,12 +35,9 @@ public class Quadra {
     @OneToOne
     private Regiao regiao;
 
-    @JoinColumn(name = "id_endereco")
+    @JoinColumn(name = "endereco_id")
     @OneToOne
     private Endereco endereco;
-
-    @Column(name = "dt_registro")
-    private LocalDate dt_registro = LocalDate.now();
 
     @JsonIgnore
     @OneToMany(mappedBy = "quadra")
